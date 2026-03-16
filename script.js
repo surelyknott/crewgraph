@@ -842,7 +842,18 @@ const setupMobilePanel = () => {
     syncMobileProductionsPanel();
   });
 
-  window.addEventListener("resize", syncMobileProductionsPanel);
+  window.addEventListener("resize", () => {
+    if (isMobileViewport()) {
+      mobileProductionsCollapsed = true;
+    }
+
+    syncMobileProductionsPanel();
+  });
+
+  if (isMobileViewport()) {
+    mobileProductionsCollapsed = true;
+  }
+
   syncMobileProductionsPanel();
 };
 
