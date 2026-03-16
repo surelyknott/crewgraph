@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL =
+  window.location.protocol === "file:" ? "http://localhost:3000" : window.location.origin;
 
 const graphElement = document.getElementById("graph");
 const selectedCrewElement = document.getElementById("selected-crew");
