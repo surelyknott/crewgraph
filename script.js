@@ -15,6 +15,8 @@ const connectionToResultsElement = document.getElementById("connection-to-result
 const connectionButtonElement = document.getElementById("find-connection-button");
 const connectionResultElement = document.getElementById("connection-result");
 const clearPathButtonElement = document.getElementById("clear-path-button");
+const hudToggleButtonElement = document.getElementById("hud-toggle-button");
+const hudBodyElement = document.getElementById("hud-body");
 const productionPanelTitleElement = document.getElementById("production-panel-title");
 const productionToggleButtonElement = document.getElementById("production-toggle-button");
 const productionListShellElement = document.getElementById("production-list-shell");
@@ -56,6 +58,7 @@ let activeConnectionData = null;
 let connectionAnimationTimers = [];
 let currentMaxNodeDistance = 1;
 let mobileProductionsCollapsed = false;
+let mobileHudCollapsed = false;
 
 const getCrewLinkKey = (leftId, rightId) => [String(leftId), String(rightId)].sort().join("::");
 const isPathModeActive = () => highlightedPathNodeIds.size > 0;
@@ -570,6 +573,22 @@ const syncMobileProductionsPanel = () => {
   );
 };
 
+const syncMobileHudPanel = () => {
+  if (!isMobileViewport()) {
+    mobileHudCollapsed = false;
+    hudBodyElement.classList.remove("is-collapsed");
+    hudToggleButtonElement.hidden = true;
+    hudToggleButtonElement.textContent = "Hide";
+    hudToggleButtonElement.setAttribute("aria-expanded", "true");
+    return;
+  }
+
+  hudToggleButtonElement.hidden = false;
+  hudBodyElement.classList.toggle("is-collapsed", mobileHudCollapsed);
+  hudToggleButtonElement.textContent = mobileHudCollapsed ? "Show" : "Hide";
+  hudToggleButtonElement.setAttribute("aria-expanded", mobileHudCollapsed ? "false" : "true");
+};
+
 const focusOnCenterNode = (data, crewId) => {
   let attempts = 0;
   const maxAttempts = 40;
@@ -833,6 +852,15 @@ const setupConnectionFinder = () => {
 };
 
 const setupMobilePanel = () => {
+  hudToggleButtonElement.addEventListener("click", () => {
+    if (!isMobileViewport()) {
+      return;
+    }
+
+    mobileHudCollapsed = !mobileHudCollapsed;
+    syncMobileHudPanel();
+  });
+
   productionToggleButtonElement.addEventListener("click", () => {
     if (!isMobileViewport()) {
       return;
@@ -844,16 +872,20 @@ const setupMobilePanel = () => {
 
   window.addEventListener("resize", () => {
     if (isMobileViewport()) {
+      mobileHudCollapsed = true;
       mobileProductionsCollapsed = true;
     }
 
+    syncMobileHudPanel();
     syncMobileProductionsPanel();
   });
 
   if (isMobileViewport()) {
+    mobileHudCollapsed = true;
     mobileProductionsCollapsed = true;
   }
 
+  syncMobileHudPanel();
   syncMobileProductionsPanel();
 };
 
