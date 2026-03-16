@@ -16,6 +16,8 @@ const connectionButtonElement = document.getElementById("find-connection-button"
 const connectionResultElement = document.getElementById("connection-result");
 const clearPathButtonElement = document.getElementById("clear-path-button");
 const productionPanelTitleElement = document.getElementById("production-panel-title");
+const productionToggleButtonElement = document.getElementById("production-toggle-button");
+const productionListShellElement = document.getElementById("production-list-shell");
 const productionListElement = document.getElementById("production-list");
 
 const TMDB_POSTERS_BY_ID = {
@@ -53,9 +55,11 @@ let pathPulseUntilMap = new Map();
 let activeConnectionData = null;
 let connectionAnimationTimers = [];
 let currentMaxNodeDistance = 1;
+let mobileProductionsCollapsed = false;
 
 const getCrewLinkKey = (leftId, rightId) => [String(leftId), String(rightId)].sort().join("::");
 const isPathModeActive = () => highlightedPathNodeIds.size > 0;
+const isMobileViewport = () => window.matchMedia("(max-width: 768px)").matches;
 
 const graph = ForceGraph()(graphElement)
   .backgroundColor("#0f0f0f")
@@ -161,7 +165,9 @@ const graph = ForceGraph()(graphElement)
     }
     ctx.fill();
 
-    const fontSize = Math.max(10, 15 / globalScale);
+    const fontSize = isMobileViewport()
+      ? Math.max(8, 11 / globalScale)
+      : Math.max(10, 15 / globalScale);
     ctx.font = `${fontSize}px Space Grotesk, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
@@ -545,6 +551,25 @@ const renderProductionsPanel = (crew, productions) => {
     .join("");
 };
 
+const syncMobileProductionsPanel = () => {
+  if (!isMobileViewport()) {
+    mobileProductionsCollapsed = false;
+    productionListShellElement.classList.remove("is-collapsed");
+    productionToggleButtonElement.hidden = true;
+    productionToggleButtonElement.textContent = "Hide";
+    productionToggleButtonElement.setAttribute("aria-expanded", "true");
+    return;
+  }
+
+  productionToggleButtonElement.hidden = false;
+  productionListShellElement.classList.toggle("is-collapsed", mobileProductionsCollapsed);
+  productionToggleButtonElement.textContent = mobileProductionsCollapsed ? "Show" : "Hide";
+  productionToggleButtonElement.setAttribute(
+    "aria-expanded",
+    mobileProductionsCollapsed ? "false" : "true"
+  );
+};
+
 const focusOnCenterNode = (data, crewId) => {
   let attempts = 0;
   const maxAttempts = 40;
@@ -807,6 +832,20 @@ const setupConnectionFinder = () => {
   });
 };
 
+const setupMobilePanel = () => {
+  productionToggleButtonElement.addEventListener("click", () => {
+    if (!isMobileViewport()) {
+      return;
+    }
+
+    mobileProductionsCollapsed = !mobileProductionsCollapsed;
+    syncMobileProductionsPanel();
+  });
+
+  window.addEventListener("resize", syncMobileProductionsPanel);
+  syncMobileProductionsPanel();
+};
+
 const startGlowAnimation = () => {
   if (glowAnimationStarted.value) {
     return;
@@ -839,6 +878,7 @@ const initializeGraph = async () => {
 
     setupSearch();
     setupConnectionFinder();
+    setupMobilePanel();
     startGlowAnimation();
     await loadCrewNetwork(selectedCrew._id);
   } catch (error) {

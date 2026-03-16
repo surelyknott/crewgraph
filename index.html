@@ -89,10 +89,24 @@
 
       <aside class="panel-shell">
         <div class="panel-card">
-          <span class="stat-label">Shared Productions</span>
-          <strong class="panel-title" id="production-panel-title">Loading...</strong>
-          <div class="production-list" id="production-list">
-            <p class="production-empty">Fetching productions...</p>
+          <div class="panel-top">
+            <div class="panel-heading">
+              <span class="stat-label">Shared Productions</span>
+              <strong class="panel-title" id="production-panel-title">Loading...</strong>
+            </div>
+            <button
+              id="production-toggle-button"
+              class="panel-toggle"
+              type="button"
+              aria-expanded="true"
+            >
+              Hide
+            </button>
+          </div>
+          <div class="production-list-shell" id="production-list-shell">
+            <div class="production-list" id="production-list">
+              <p class="production-empty">Fetching productions...</p>
+            </div>
           </div>
         </div>
       </aside>
