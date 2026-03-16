@@ -23,6 +23,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname), { index: false }));
 
 app.get("/", (_req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+app.get("/health", (_req, res) => {
   res.json({
     name: "CrewGraph API",
     status: "ok"
