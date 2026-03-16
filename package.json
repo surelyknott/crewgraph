@@ -1,0 +1,28 @@
+{
+  "name": "crewgraph",
+  "version": "1.0.0",
+  "description": "Node.js + Express backend for CrewGraph",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed": "node scripts/seed.js"
+  },
+  "keywords": [
+    "express",
+    "mongodb",
+    "mongoose",
+    "crewgraph"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongodb": "^7.1.0",
+    "mongoose": "^8.12.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

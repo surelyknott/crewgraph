@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CrewGraph Force Graph Test</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="search-shell">
+        <label class="search-label" for="crew-search">Crew Search</label>
+        <div class="search-box">
+          <input
+            id="crew-search"
+            type="text"
+            placeholder="Search crew by name..."
+            autocomplete="off"
+          />
+          <div class="search-results" id="search-results" hidden></div>
+        </div>
+      </div>
+
+      <aside class="hud">
+        <p class="eyebrow">CrewGraph API Test</p>
+        <h1>Collaboration Network</h1>
+        <p class="description">
+          Force Graph visualization powered by your local CrewGraph backend.
+        </p>
+
+        <div class="stat-card">
+          <span class="stat-label">Selected Crew Member</span>
+          <strong id="selected-crew">Loading...</strong>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-card compact">
+            <span class="stat-label">Crew Nodes</span>
+            <strong id="node-count">0</strong>
+          </div>
+          <div class="stat-card compact">
+            <span class="stat-label">Collaborations</span>
+            <strong id="link-count">0</strong>
+          </div>
+        </div>
+
+        <section class="connection-section">
+          <p class="connection-heading">Find Connection</p>
+
+          <label class="connection-label" for="connection-from">From</label>
+          <div class="connection-input-shell">
+            <input
+              id="connection-from"
+              class="connection-input"
+              type="text"
+              placeholder="Start crew member..."
+              autocomplete="off"
+            />
+            <div class="connection-dropdown" id="connection-from-results" hidden></div>
+          </div>
+
+          <label class="connection-label" for="connection-to">To</label>
+          <div class="connection-input-shell">
+            <input
+              id="connection-to"
+              class="connection-input"
+              type="text"
+              placeholder="Target crew member..."
+              autocomplete="off"
+            />
+            <div class="connection-dropdown" id="connection-to-results" hidden></div>
+          </div>
+
+          <button id="find-connection-button" class="connection-button" type="button">
+            Find Connection
+          </button>
+
+          <div class="connection-result" id="connection-result">
+            <p class="connection-placeholder">Select two crew members to reveal the shortest path.</p>
+          </div>
+
+          <button id="clear-path-button" class="connection-button secondary" type="button" hidden>
+            Clear Path
+          </button>
+        </section>
+
+        <p class="status" id="status">Fetching crew members...</p>
+      </aside>
+
+      <aside class="panel-shell">
+        <div class="panel-card">
+          <span class="stat-label">Shared Productions</span>
+          <strong class="panel-title" id="production-panel-title">Loading...</strong>
+          <div class="production-list" id="production-list">
+            <p class="production-empty">Fetching productions...</p>
+          </div>
+        </div>
+      </aside>
+
+      <main id="graph"></main>
+    </div>
+
+    <script src="https://unpkg.com/force-graph"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>
