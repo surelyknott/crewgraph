@@ -21,6 +21,7 @@ const productionPanelTitleElement = document.getElementById("production-panel-ti
 const productionToggleButtonElement = document.getElementById("production-toggle-button");
 const productionListShellElement = document.getElementById("production-list-shell");
 const productionListElement = document.getElementById("production-list");
+const SIMULATION_SETTLE_MS = 2800;
 
 const TMDB_POSTERS_BY_ID = {
   155: "https://media.themoviedb.org/t/p/w300_and_h450_bestv2/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
@@ -46,7 +47,6 @@ let selectedCrewId = null;
 let isLoadingNetwork = false;
 let focusedStrengthMap = new Map();
 let maxFocusedSharedCredits = 1;
-const glowAnimationStarted = { value: false };
 let currentBaseGraphData = null;
 let currentCenterCrew = null;
 let currentSelectedProductions = [];
@@ -59,10 +59,50 @@ let connectionAnimationTimers = [];
 let currentMaxNodeDistance = 1;
 let mobileProductionsCollapsed = false;
 let mobileHudCollapsed = false;
+let hoveredNodeId = null;
+let isDraggingNode = false;
+let animationFrameId = null;
+let pathAnimationEndsAt = 0;
+let simulationAnimatingUntil = 0;
 
 const getCrewLinkKey = (leftId, rightId) => [String(leftId), String(rightId)].sort().join("::");
 const isPathModeActive = () => highlightedPathNodeIds.size > 0;
 const isMobileViewport = () => window.matchMedia("(max-width: 768px)").matches;
+const getNow = () => window.performance.now();
+const hasActivePathPulse = () => pathAnimationEndsAt > getNow();
+const hasHoverPulse = () => Boolean(hoveredNodeId);
+const hasSimulationMotion = () => simulationAnimatingUntil > getNow();
+const shouldAnimateGraph = () => isDraggingNode || hasHoverPulse() || hasActivePathPulse() || hasSimulationMotion();
+
+const refreshGraph = () => {
+  if (typeof graph.refresh === "function") {
+    graph.refresh();
+  }
+};
+
+const runAnimationLoop = () => {
+  refreshGraph();
+
+  if (shouldAnimateGraph()) {
+    animationFrameId = window.requestAnimationFrame(runAnimationLoop);
+    return;
+  }
+
+  animationFrameId = null;
+};
+
+const ensureAnimationLoop = () => {
+  if (animationFrameId !== null) {
+    return;
+  }
+
+  animationFrameId = window.requestAnimationFrame(runAnimationLoop);
+};
+
+const startSimulationAnimationWindow = (duration = SIMULATION_SETTLE_MS) => {
+  simulationAnimatingUntil = Math.max(simulationAnimatingUntil, getNow() + duration);
+  ensureAnimationLoop();
+};
 
 const graph = ForceGraph()(graphElement)
   .backgroundColor("#0f0f0f")
@@ -122,6 +162,7 @@ const graph = ForceGraph()(graphElement)
     const isRevealedPathNode = revealedPathNodeIds.has(String(node.id));
     const pulseUntil = pathPulseUntilMap.get(String(node.id)) || 0;
     const hasPulse = pulseUntil > now;
+    const isHoveredNode = hoveredNodeId === String(node.id);
     const distance = Number.isInteger(node.distance) ? node.distance : 4;
     const opacityByDistance = currentMaxNodeDistance <= 2
       ? [1, 0.72, 0.14, 0.08, 0.06]
@@ -142,6 +183,15 @@ const graph = ForceGraph()(graphElement)
       ctx.beginPath();
       ctx.arc(node.x, node.y, glowRadius, 0, 2 * Math.PI, false);
       ctx.fillStyle = `rgba(255, 209, 102, ${Math.min(glowAlpha, 0.34).toFixed(3)})`;
+      ctx.fill();
+    }
+
+    if (isHoveredNode) {
+      const hoverPulse = 0.55 + Math.sin(now / 260) * 0.45;
+
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, nodeRadius + 4 + hoverPulse * 4, 0, 2 * Math.PI, false);
+      ctx.fillStyle = `rgba(255, 209, 102, ${(0.08 + hoverPulse * 0.12).toFixed(3)})`;
       ctx.fill();
     }
 
@@ -193,16 +243,37 @@ const graph = ForceGraph()(graphElement)
     loadCrewNetwork(node.id);
   })
   .onNodeDrag((node) => {
+    isDraggingNode = true;
+    ensureAnimationLoop();
     node.fx = node.x;
     node.fy = node.y;
   })
   .onNodeDragEnd((node) => {
+    isDraggingNode = false;
+    startSimulationAnimationWindow();
     node.fx = node.x;
     node.fy = node.y;
+  })
+  .onNodeHover((node) => {
+    const nextHoveredNodeId = node ? String(node.id) : null;
+
+    if (hoveredNodeId === nextHoveredNodeId) {
+      return;
+    }
+
+    hoveredNodeId = nextHoveredNodeId;
+
+    if (hoveredNodeId) {
+      ensureAnimationLoop();
+      return;
+    }
+
+    refreshGraph();
   })
   .onNodeRightClick((node) => {
     node.fx = undefined;
     node.fy = undefined;
+    startSimulationAnimationWindow();
     graph.d3ReheatSimulation();
   });
 
@@ -624,6 +695,7 @@ const clearConnectionState = (resetPanel = true) => {
   highlightedPathEdgeKeys = new Set();
   revealedPathNodeIds = new Set();
   pathPulseUntilMap = new Map();
+   pathAnimationEndsAt = 0;
   activeConnectionData = null;
   clearPathButtonElement.hidden = true;
 
@@ -656,6 +728,8 @@ const animateConnectionReveal = (pathIds) => {
   clearConnectionAnimationTimers();
   revealedPathNodeIds = new Set();
   pathPulseUntilMap = new Map();
+  pathAnimationEndsAt = getNow() + Math.max(850, (Math.max(pathIds.length - 1, 0) * 320) + 850);
+  ensureAnimationLoop();
 
   pathIds.forEach((nodeId, index) => {
     const timerId = window.setTimeout(() => {
@@ -679,6 +753,7 @@ const applyConnectionPath = (connectionData) => {
   const mergedGraphData = mergeConnectionPathIntoGraph(currentBaseGraphData, connectionData);
 
   graph.graphData(mergedGraphData);
+  startSimulationAnimationWindow();
   graph.d3ReheatSimulation();
   focusOnCenterNode(mergedGraphData, connectionData.path[0]._id);
   renderConnectionResult(connectionData);
@@ -691,6 +766,7 @@ const restoreCurrentNetworkGraph = () => {
   }
 
   graph.graphData(currentBaseGraphData);
+  startSimulationAnimationWindow();
   graph.d3ReheatSimulation();
   focusOnCenterNode(currentBaseGraphData, currentCenterCrew._id);
 };
@@ -716,6 +792,7 @@ const renderGraph = (graphData, crew, productions, options = {}) => {
   }
 
   graph.graphData(cloneGraphData(baseGraphData));
+  startSimulationAnimationWindow();
   graph.d3ReheatSimulation();
   focusOnCenterNode(baseGraphData, crew._id);
 };
@@ -889,24 +966,6 @@ const setupMobilePanel = () => {
   syncMobileProductionsPanel();
 };
 
-const startGlowAnimation = () => {
-  if (glowAnimationStarted.value) {
-    return;
-  }
-
-  glowAnimationStarted.value = true;
-
-  const tick = () => {
-    if (typeof graph.refresh === "function") {
-      graph.refresh();
-    }
-
-    window.requestAnimationFrame(tick);
-  };
-
-  window.requestAnimationFrame(tick);
-};
-
 const initializeGraph = async () => {
   try {
     statusElement.textContent = "Fetching crew list...";
@@ -922,7 +981,6 @@ const initializeGraph = async () => {
     setupSearch();
     setupConnectionFinder();
     setupMobilePanel();
-    startGlowAnimation();
     await loadCrewNetwork(selectedCrew._id);
   } catch (error) {
     statusElement.textContent = error.message;
