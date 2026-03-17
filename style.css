@@ -453,6 +453,11 @@ body {
   min-width: 0;
 }
 
+.status-mobile {
+  display: none;
+  margin: 12px 0 0;
+}
+
 .hud-toggle {
   display: none;
   flex-shrink: 0;
@@ -566,6 +571,16 @@ h1 {
     width: auto;
     max-height: min(43vh, calc(100vh - 260px));
     padding: 16px;
+  }
+
+  .status-mobile {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.92rem;
+  }
+
+  .status-desktop {
+    display: none;
   }
 
   .hud-toggle {

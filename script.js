@@ -6,6 +6,7 @@ const selectedCrewElement = document.getElementById("selected-crew");
 const nodeCountElement = document.getElementById("node-count");
 const linkCountElement = document.getElementById("link-count");
 const statusElement = document.getElementById("status");
+const mobileStatusElement = document.getElementById("status-mobile");
 const searchInputElement = document.getElementById("crew-search");
 const searchResultsElement = document.getElementById("search-results");
 const seeConnectionsButtonElement = document.getElementById("see-connections-button");
@@ -74,6 +75,10 @@ const hasActivePathPulse = () => pathAnimationEndsAt > getNow();
 const hasHoverPulse = () => Boolean(hoveredNodeId);
 const hasSimulationMotion = () => simulationAnimatingUntil > getNow();
 const shouldAnimateGraph = () => isDraggingNode || hasHoverPulse() || hasActivePathPulse() || hasSimulationMotion();
+const setStatusText = (message) => {
+  statusElement.textContent = message;
+  mobileStatusElement.textContent = message;
+};
 
 const refreshGraph = () => {
   if (typeof graph.refresh === "function") {
@@ -824,13 +829,13 @@ const renderGraph = (graphData, crew, productions, options = {}) => {
 const loadCrewNetwork = async (crewId, options = {}) => {
   try {
     isLoadingNetwork = true;
-    statusElement.textContent = "Fetching collaboration network...";
+    setStatusText("Fetching collaboration network...");
     hideSearchResults();
 
     if (networkCache.has(String(crewId))) {
       const cached = networkCache.get(String(crewId));
       renderGraph(cloneGraphData(cached.graphData), cached.center, cached.selectedProductions, options);
-      statusElement.textContent = "Graph ready. Drag, zoom, and click nodes to explore.";
+      setStatusText("Graph ready. Drag, zoom, and click nodes to explore.");
       return;
     }
 
@@ -845,9 +850,9 @@ const loadCrewNetwork = async (crewId, options = {}) => {
       selectedProductions
     });
     renderGraph(graphData, center, selectedProductions, options);
-    statusElement.textContent = "Graph ready. Drag, zoom, and click nodes to explore.";
+    setStatusText("Graph ready. Drag, zoom, and click nodes to explore.");
   } catch (error) {
-    statusElement.textContent = error.message;
+    setStatusText(error.message);
     console.error(error);
   } finally {
     isLoadingNetwork = false;
@@ -887,7 +892,7 @@ const setupSearch = () => {
     const selectedCrew = resolveSearchCrew();
 
     if (!selectedCrew) {
-      statusElement.textContent = "Choose a valid crew member from the search results.";
+      setStatusText("Choose a valid crew member from the search results.");
       return;
     }
 
@@ -934,18 +939,18 @@ const setupConnectionFinder = () => {
     }
 
     try {
-      statusElement.textContent = "Finding shortest collaboration path...";
+      setStatusText("Finding shortest collaboration path...");
       const connectionData = await fetchJson(
         `${API_BASE_URL}/connection/${sourceCrew._id}/${targetCrew._id}`
       );
 
       await loadCrewNetwork(sourceCrew._id, { preserveConnection: true });
       applyConnectionPath(connectionData);
-      statusElement.textContent = "Connection path highlighted.";
+      setStatusText("Connection path highlighted.");
     } catch (error) {
       clearConnectionState(false);
       connectionResultElement.innerHTML = `<p class="connection-empty">${error.message}</p>`;
-      statusElement.textContent = error.message;
+      setStatusText(error.message);
       console.error(error);
     }
   });
@@ -953,7 +958,7 @@ const setupConnectionFinder = () => {
   clearPathButtonElement.addEventListener("click", () => {
     clearConnectionState();
     restoreCurrentNetworkGraph();
-    statusElement.textContent = "Graph ready. Drag, zoom, and click nodes to explore.";
+    setStatusText("Graph ready. Drag, zoom, and click nodes to explore.");
   });
 
   document.addEventListener("click", (event) => {
@@ -1016,7 +1021,7 @@ const setupMobilePanel = () => {
 
 const initializeGraph = async () => {
   try {
-    statusElement.textContent = "Fetching crew list...";
+    setStatusText("Fetching crew list...");
 
     const crewResponse = await fetchJson(`${API_BASE_URL}/crew`);
     crewDirectory = crewResponse.data || [];
@@ -1031,7 +1036,7 @@ const initializeGraph = async () => {
     setupMobilePanel();
     await loadCrewNetwork(selectedCrew._id);
   } catch (error) {
-    statusElement.textContent = error.message;
+    setStatusText(error.message);
     selectedCrewElement.textContent = "Unavailable";
     nodeCountElement.textContent = "0";
     linkCountElement.textContent = "0";
