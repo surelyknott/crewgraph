@@ -263,14 +263,14 @@ body {
   border: 1px solid var(--border);
 }
 
+.connection-result-shell.is-collapsed {
+  display: none;
+}
+
 .connection-result {
   margin-top: 14px;
   padding-top: 14px;
   border-top: 1px solid var(--border);
-}
-
-.connection-result.is-collapsed {
-  display: none;
 }
 
 .connection-result-title {

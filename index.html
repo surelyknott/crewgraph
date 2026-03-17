@@ -96,13 +96,16 @@
               Find Connection
             </button>
 
-            <div class="connection-result" id="connection-result">
-              <p class="connection-placeholder">Select two crew members to reveal the shortest path.</p>
+            <div class="connection-result-shell" id="connection-result-shell">
+              <div class="connection-result" id="connection-result">
+                <p class="connection-placeholder">Select two crew members to reveal the shortest path.</p>
+              </div>
+
+              <button id="clear-path-button" class="connection-button secondary" type="button" hidden>
+                Clear Path
+              </button>
             </div>
 
-            <button id="clear-path-button" class="connection-button secondary" type="button" hidden>
-              Clear Path
-            </button>
             <button id="toggle-connection-result-button" class="connection-button secondary connection-toggle-button" type="button" hidden>
               Hide
             </button>

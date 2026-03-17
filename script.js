@@ -15,6 +15,7 @@ const connectionToElement = document.getElementById("connection-to");
 const connectionFromResultsElement = document.getElementById("connection-from-results");
 const connectionToResultsElement = document.getElementById("connection-to-results");
 const connectionButtonElement = document.getElementById("find-connection-button");
+const connectionResultShellElement = document.getElementById("connection-result-shell");
 const connectionResultElement = document.getElementById("connection-result");
 const clearPathButtonElement = document.getElementById("clear-path-button");
 const toggleConnectionResultButtonElement = document.getElementById("toggle-connection-result-button");
@@ -89,13 +90,13 @@ const syncConnectionResultPanel = () => {
 
   if (!shouldShowToggle) {
     mobileConnectionResultCollapsed = false;
-    connectionResultElement.classList.remove("is-collapsed");
+    connectionResultShellElement.classList.remove("is-collapsed");
     toggleConnectionResultButtonElement.textContent = "Hide";
     toggleConnectionResultButtonElement.setAttribute("aria-expanded", "true");
     return;
   }
 
-  connectionResultElement.classList.toggle("is-collapsed", mobileConnectionResultCollapsed);
+  connectionResultShellElement.classList.toggle("is-collapsed", mobileConnectionResultCollapsed);
   toggleConnectionResultButtonElement.textContent = mobileConnectionResultCollapsed ? "Show" : "Hide";
   toggleConnectionResultButtonElement.setAttribute(
     "aria-expanded",
