@@ -131,24 +131,13 @@ const graph = ForceGraph()(graphElement)
 
     return highlightedPathEdgeKeys.has(link.key) ? 4.5 : 1;
   })
-  .linkLabel((link) => `Worked together on ${link.sharedCredits || 1} production${(link.sharedCredits || 1) === 1 ? "" : "s"}`)
+  .linkLabel(() => "")
   .nodeLabel((node) => {
-    const strength = focusedStrengthMap.get(String(node.id)) || 0;
-
     if (isPathModeActive() && highlightedPathNodeIds.has(String(node.id)) && node.id !== selectedCrewId) {
-      const pathIndex = activeConnectionData?.path?.findIndex(
-        (pathNode) => String(pathNode._id) === String(node.id)
-      );
-      const position = Number.isInteger(pathIndex) ? `Path step ${pathIndex + 1}` : "Connection path";
-
-      return `${position}<br/>${node.label}`;
+      return `Explore ${node.label}'s network`;
     }
 
-    if (node.id === selectedCrewId || strength === 0) {
-      return "";
-    }
-
-    return `Worked together on ${strength} production${strength === 1 ? "" : "s"}`;
+    return "";
   })
   .linkDirectionalParticles(0)
   .d3AlphaDecay(0.018)

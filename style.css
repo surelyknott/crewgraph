@@ -540,7 +540,7 @@ h1 {
     top: auto;
     right: 16px;
     left: 16px;
-    bottom: 84px;
+    bottom: max(0px, env(safe-area-inset-bottom));
     width: auto;
   }
 
