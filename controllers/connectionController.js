@@ -166,7 +166,7 @@ const getConnectionPath = asyncHandler(async (req, res) => {
   }
 
   const directSharedMetadata = adjacencyMap.get(String(crewA))?.get(String(crewB));
-  const directSharedProductions = (directSharedMetadata?.sharedProductionIds || [])
+  const directSharedProductions = [...(directSharedMetadata?.sharedProductionIds || [])]
     .map((productionId) => productionMap.get(String(productionId)))
     .filter(Boolean)
     .sort((left, right) => right.year - left.year || left.title.localeCompare(right.title))
