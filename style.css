@@ -269,6 +269,10 @@ body {
   border-top: 1px solid var(--border);
 }
 
+.connection-result.is-collapsed {
+  display: none;
+}
+
 .connection-result-title {
   display: block;
   margin-bottom: 6px;
@@ -306,6 +310,10 @@ body {
   color: var(--muted);
   font-size: 0.94rem;
   padding-left: 10px;
+}
+
+.connection-toggle-button {
+  display: none;
 }
 
 .panel-shell {
@@ -645,5 +653,9 @@ h1 {
   .connection-result {
     margin-top: 12px;
     padding-top: 12px;
+  }
+
+  .connection-toggle-button {
+    display: block;
   }
 }

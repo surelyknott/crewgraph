@@ -17,6 +17,7 @@ const connectionToResultsElement = document.getElementById("connection-to-result
 const connectionButtonElement = document.getElementById("find-connection-button");
 const connectionResultElement = document.getElementById("connection-result");
 const clearPathButtonElement = document.getElementById("clear-path-button");
+const toggleConnectionResultButtonElement = document.getElementById("toggle-connection-result-button");
 const hudToggleButtonElement = document.getElementById("hud-toggle-button");
 const hudBodyElement = document.getElementById("hud-body");
 const productionPanelTitleElement = document.getElementById("production-panel-title");
@@ -61,6 +62,7 @@ let connectionAnimationTimers = [];
 let currentMaxNodeDistance = 1;
 let mobileProductionsCollapsed = false;
 let mobileHudCollapsed = false;
+let mobileConnectionResultCollapsed = false;
 let hoveredNodeId = null;
 let isDraggingNode = false;
 let animationFrameId = null;
@@ -78,6 +80,27 @@ const shouldAnimateGraph = () => isDraggingNode || hasHoverPulse() || hasActiveP
 const setStatusText = (message) => {
   statusElement.textContent = message;
   mobileStatusElement.textContent = message;
+};
+
+const syncConnectionResultPanel = () => {
+  const shouldShowToggle = isMobileViewport() && (Boolean(activeConnectionData) || clearPathButtonElement.hidden === false);
+
+  toggleConnectionResultButtonElement.hidden = !shouldShowToggle;
+
+  if (!shouldShowToggle) {
+    mobileConnectionResultCollapsed = false;
+    connectionResultElement.classList.remove("is-collapsed");
+    toggleConnectionResultButtonElement.textContent = "Hide";
+    toggleConnectionResultButtonElement.setAttribute("aria-expanded", "true");
+    return;
+  }
+
+  connectionResultElement.classList.toggle("is-collapsed", mobileConnectionResultCollapsed);
+  toggleConnectionResultButtonElement.textContent = mobileConnectionResultCollapsed ? "Show" : "Hide";
+  toggleConnectionResultButtonElement.setAttribute(
+    "aria-expanded",
+    mobileConnectionResultCollapsed ? "false" : "true"
+  );
 };
 
 const refreshGraph = () => {
@@ -287,7 +310,19 @@ const fetchJson = async (url) => {
   const response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+    let errorMessage = `Request failed: ${response.status} ${response.statusText}`;
+
+    try {
+      const errorPayload = await response.json();
+
+      if (errorPayload?.error) {
+        errorMessage = errorPayload.error;
+      }
+    } catch (_error) {
+      // Ignore non-JSON error bodies and use the fallback message.
+    }
+
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -301,6 +336,7 @@ const hideSearchResults = () => {
 const renderConnectionPlaceholder = (message) => {
   clearPathButtonElement.hidden = true;
   connectionResultElement.innerHTML = `<p class="connection-empty">${message}</p>`;
+  syncConnectionResultPanel();
 };
 
 const renderSearchResults = (matches) => {
@@ -723,9 +759,10 @@ const clearConnectionState = (resetPanel = true) => {
   highlightedPathEdgeKeys = new Set();
   revealedPathNodeIds = new Set();
   pathPulseUntilMap = new Map();
-   pathAnimationEndsAt = 0;
+  pathAnimationEndsAt = 0;
   activeConnectionData = null;
   clearPathButtonElement.hidden = true;
+  mobileConnectionResultCollapsed = false;
 
   if (resetPanel) {
     renderConnectionPlaceholder("Select two crew members to reveal the shortest path.");
@@ -750,6 +787,8 @@ const renderConnectionResult = (connectionData) => {
     <div class="connection-path">${parts.join("")}</div>
   `;
   clearPathButtonElement.hidden = false;
+  mobileConnectionResultCollapsed = false;
+  syncConnectionResultPanel();
 };
 
 const animateConnectionReveal = (pathIds) => {
@@ -949,8 +988,13 @@ const setupConnectionFinder = () => {
       setStatusText("Connection path highlighted.");
     } catch (error) {
       clearConnectionState(false);
-      connectionResultElement.innerHTML = `<p class="connection-empty">${error.message}</p>`;
-      setStatusText(error.message);
+      const noConnectionMessage = error.message === "No collaboration path found"
+        ? `No connection found between ${sourceCrew.name} and ${targetCrew.name}.`
+        : error.message;
+
+      connectionResultElement.innerHTML = `<p class="connection-empty">${noConnectionMessage}</p>`;
+      setStatusText(noConnectionMessage);
+      syncConnectionResultPanel();
       console.error(error);
     }
   });
@@ -959,6 +1003,15 @@ const setupConnectionFinder = () => {
     clearConnectionState();
     restoreCurrentNetworkGraph();
     setStatusText("Graph ready. Drag, zoom, and click nodes to explore.");
+  });
+
+  toggleConnectionResultButtonElement.addEventListener("click", () => {
+    if (!isMobileViewport() || toggleConnectionResultButtonElement.hidden) {
+      return;
+    }
+
+    mobileConnectionResultCollapsed = !mobileConnectionResultCollapsed;
+    syncConnectionResultPanel();
   });
 
   document.addEventListener("click", (event) => {
@@ -1008,6 +1061,7 @@ const setupMobilePanel = () => {
 
     syncMobileHudPanel();
     syncMobileProductionsPanel();
+    syncConnectionResultPanel();
   });
 
   if (isMobileViewport()) {
@@ -1017,6 +1071,7 @@ const setupMobilePanel = () => {
 
   syncMobileHudPanel();
   syncMobileProductionsPanel();
+  syncConnectionResultPanel();
 };
 
 const initializeGraph = async () => {
