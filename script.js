@@ -600,11 +600,9 @@ const updateSelectedCrew = (crew) => {
   updateSearchInput(crew);
 };
 
-const renderProductionsPanel = (crew, productions) => {
-  productionPanelTitleElement.textContent = `${crew.name}'s Productions`;
-
+const renderProductionItems = (productions, emptyMessage) => {
   if (!productions.length) {
-    productionListElement.innerHTML = '<p class="production-empty">No productions found for this crew member.</p>';
+    productionListElement.innerHTML = `<p class="production-empty">${emptyMessage}</p>`;
     return;
   }
 
@@ -615,12 +613,12 @@ const renderProductionsPanel = (crew, productions) => {
           <img
             class="production-poster"
             src="${TMDB_POSTERS_BY_ID[production.tmdbId] || ""}"
-            alt="${production.label} poster"
+            alt="${production.label || production.title} poster"
             loading="lazy"
           />
           <div class="production-content">
             <div class="production-item-header">
-              <span class="production-item-title">${production.label}</span>
+              <span class="production-item-title">${production.label || production.title}</span>
               <span class="production-item-year">${production.year}</span>
             </div>
             <div class="production-item-meta">TMDB ID: ${production.tmdbId}</div>
@@ -629,6 +627,25 @@ const renderProductionsPanel = (crew, productions) => {
       `
     )
     .join("");
+};
+
+const renderProductionsPanel = (crew, productions) => {
+  productionPanelTitleElement.textContent = `${crew.name}'s Most Recent Productions`;
+  renderProductionItems(productions, "No productions found for this crew member.");
+};
+
+const renderSharedProductionsPanel = (connectionData) => {
+  const sourceName = connectionData.requestedPair?.source?.name || connectionData.path?.[0]?.name || "Selected";
+  const targetName =
+    connectionData.requestedPair?.target?.name ||
+    connectionData.path?.[connectionData.path.length - 1]?.name ||
+    "Crew";
+
+  productionPanelTitleElement.textContent = `${sourceName} and ${targetName}'s Shared Productions`;
+  renderProductionItems(
+    connectionData.sharedProductions || [],
+    `No direct shared productions were found for ${sourceName} and ${targetName}.`
+  );
 };
 
 const syncMobileProductionsPanel = () => {
@@ -762,6 +779,7 @@ const applyConnectionPath = (connectionData) => {
   startSimulationAnimationWindow();
   graph.d3ReheatSimulation();
   focusOnCenterNode(mergedGraphData, connectionData.path[0]._id);
+  renderSharedProductionsPanel(connectionData);
   renderConnectionResult(connectionData);
   animateConnectionReveal(connectionData.path.map((crew) => crew._id));
 };

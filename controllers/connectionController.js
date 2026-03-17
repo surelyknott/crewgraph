@@ -38,7 +38,20 @@ const getConnectionPath = asyncHandler(async (req, res) => {
           role: startCrew.role
         }
       ],
-      segments: []
+      segments: [],
+      requestedPair: {
+        source: {
+          _id: startCrew._id,
+          name: startCrew.name,
+          role: startCrew.role
+        },
+        target: {
+          _id: endCrew._id,
+          name: endCrew.name,
+          role: endCrew.role
+        }
+      },
+      sharedProductions: []
     });
   }
 
@@ -152,10 +165,35 @@ const getConnectionPath = asyncHandler(async (req, res) => {
     });
   }
 
+  const directSharedMetadata = adjacencyMap.get(String(crewA))?.get(String(crewB));
+  const directSharedProductions = (directSharedMetadata?.sharedProductionIds || [])
+    .map((productionId) => productionMap.get(String(productionId)))
+    .filter(Boolean)
+    .sort((left, right) => right.year - left.year || left.title.localeCompare(right.title))
+    .map((production) => ({
+      _id: production._id,
+      title: production.title,
+      year: production.year,
+      tmdbId: production.tmdbId
+    }));
+
   res.json({
     degrees: Math.max(0, path.length - 1),
     path,
-    segments
+    segments,
+    requestedPair: {
+      source: {
+        _id: startCrew._id,
+        name: startCrew.name,
+        role: startCrew.role
+      },
+      target: {
+        _id: endCrew._id,
+        name: endCrew.name,
+        role: endCrew.role
+      }
+    },
+    sharedProductions: directSharedProductions
   });
 });
 
