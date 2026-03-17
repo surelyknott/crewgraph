@@ -8,6 +8,7 @@ const linkCountElement = document.getElementById("link-count");
 const statusElement = document.getElementById("status");
 const searchInputElement = document.getElementById("crew-search");
 const searchResultsElement = document.getElementById("search-results");
+const seeConnectionsButtonElement = document.getElementById("see-connections-button");
 const connectionFromElement = document.getElementById("connection-from");
 const connectionToElement = document.getElementById("connection-to");
 const connectionFromResultsElement = document.getElementById("connection-from-results");
@@ -331,6 +332,22 @@ const renderSearchResults = (matches) => {
 
 const updateSearchInput = (crew) => {
   searchInputElement.value = crew.name;
+};
+
+const resolveSearchCrew = () => {
+  const exactMatch = resolveCrewByName(searchInputElement.value);
+
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  const matches = filterCrewDirectory(searchInputElement.value);
+
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+  return null;
 };
 
 const resolveCrewByName = (name) => {
@@ -855,6 +872,21 @@ const setupSearch = () => {
     loadCrewNetwork(resultButton.dataset.crewId);
   });
 
+  seeConnectionsButtonElement.addEventListener("click", async () => {
+    if (isLoadingNetwork) {
+      return;
+    }
+
+    const selectedCrew = resolveSearchCrew();
+
+    if (!selectedCrew) {
+      statusElement.textContent = "Choose a valid crew member from the search results.";
+      return;
+    }
+
+    await loadCrewNetwork(selectedCrew._id);
+  });
+
   document.addEventListener("click", (event) => {
     if (event.target === searchInputElement || searchResultsElement.contains(event.target)) {
       return;
@@ -869,6 +901,15 @@ const setupSearch = () => {
     }
 
     handleSearchInput();
+  });
+
+  searchInputElement.addEventListener("keydown", async (event) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+
+    event.preventDefault();
+    seeConnectionsButtonElement.click();
   });
 };
 

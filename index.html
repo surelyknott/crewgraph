@@ -8,19 +8,6 @@
   </head>
   <body>
     <div class="app-shell">
-      <div class="search-shell">
-        <label class="search-label" for="crew-search">Crew Search</label>
-        <div class="search-box">
-          <input
-            id="crew-search"
-            type="text"
-            placeholder="Search crew by name..."
-            autocomplete="off"
-          />
-          <div class="search-results" id="search-results" hidden></div>
-        </div>
-      </div>
-
       <aside class="hud">
         <div class="hud-top">
           <div class="hud-heading">
@@ -58,6 +45,23 @@
               <strong id="link-count">0</strong>
             </div>
           </div>
+
+          <section class="search-section">
+            <p class="search-heading">Crew Search</p>
+            <label class="search-label" for="crew-search">Search Crew</label>
+            <div class="search-box">
+              <input
+                id="crew-search"
+                type="text"
+                placeholder="Search crew by name..."
+                autocomplete="off"
+              />
+              <div class="search-results" id="search-results" hidden></div>
+            </div>
+            <button id="see-connections-button" class="connection-button" type="button">
+              See Connections
+            </button>
+          </section>
 
           <section class="connection-section">
             <p class="connection-heading">Find Connection</p>
